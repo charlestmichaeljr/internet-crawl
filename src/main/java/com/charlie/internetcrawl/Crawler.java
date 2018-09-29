@@ -35,9 +35,6 @@ public class Crawler {
             ObjectMapper mapper = new ObjectMapper();
             this.internet = mapper.readValue(new File(this.filePath), Internet.class);
 
-            /*String jsonResult = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this.internet);
-            System.out.println(jsonResult);*/
-
         } catch (IOException e) {
             e.printStackTrace();
         }
