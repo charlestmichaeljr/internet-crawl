@@ -19,6 +19,8 @@ public class Crawler {
     private Internet internet;
 
     private HashMap<String, Page> validPages = new HashMap<>();
+
+    private HashSet<String> visitedPages = new HashSet<>();
     private HashSet<String> skippedPages = new HashSet<>();
     private HashSet<String> invalidLinks = new HashSet<>();
 
@@ -30,7 +32,7 @@ public class Crawler {
         getInternetFromFile();
     }
 
-    public void getInternetFromFile() {
+    private void getInternetFromFile() {
         try {
             ObjectMapper mapper = new ObjectMapper();
             this.internet = mapper.readValue(new File(this.filePath), Internet.class);
@@ -46,37 +48,22 @@ public class Crawler {
         Page root = this.internet.getPages().stream().findFirst().get();
 
         String link = root.getAddress();
-        root.setVisited(true);
-        validPages.put(link, root);
+
+        markPageVisited(link,root);
 
         visitPage(root);
 
-        System.out.println("********* Visited *************");
-        List<String> visited = validPages.values().stream()
-                .filter(p -> p.getVisited().equals(true))
-                .map(p -> p.getAddress())
-                .collect(Collectors.toList());
-        for (String address : visited) {
-            System.out.println(address);
-        }
-
-        System.out.println("\n");
-        System.out.println("********* Skipped **********");
-        System.out.println(skippedPages);
-
-        System.out.println("\n");
-        System.out.println("********* Invalid **********");
-        System.out.println(invalidLinks);
+        outputResults();
 
     }
 
-    public void addMainPages() {
+    private void addMainPages() {
         for (Page page : this.internet.getPages()) {
             validPages.put(page.getAddress(), page);
         }
     }
 
-    public void visitPage(Page page) {
+    private void visitPage(Page page) {
         for (String link : page.getLinks()) {
             if (!validPages.containsKey(link)) {
                 invalidLinks.add(link);
@@ -84,13 +71,31 @@ public class Crawler {
             }
             Page nextPage = validPages.get(link);
             if (!nextPage.getVisited()) {
-                nextPage.setVisited(true);
-                validPages.put(link, nextPage);
+                markPageVisited(link,nextPage);
                 visitPage(validPages.get(link));
             } else {
                 skippedPages.add(link);
             }
         }
         return;
+    }
+
+    private void markPageVisited(String link,Page page) {
+        page.setVisited(true);
+        validPages.put(link, page);
+        visitedPages.add(link);
+    }
+
+    private void outputResults () {
+        System.out.println("********* Success *************");
+        System.out.println(visitedPages);
+
+        System.out.println("\n");
+        System.out.println("********* Skipped **********");
+        System.out.println(skippedPages);
+
+        System.out.println("\n");
+        System.out.println("********* Error **********");
+        System.out.println(invalidLinks);
     }
 }
